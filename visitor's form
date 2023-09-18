@@ -1,0 +1,131 @@
++package com.example.visitorsbook;
+
+import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.HashMap;
+import java.util.Objects;
+
+public class visitorsform extends AppCompatActivity {
+
+    private EditText txtname, txtmail, txtphne, txtcoment, txtorg, txttitle;
+    private Button btnsubmit;
+
+    private FirebaseAuth mauth;
+
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference databaseReference;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_visitorsform);
+
+        txtname=(EditText) findViewById(R.id.txtname);
+        txtcoment=(EditText) findViewById(R.id.txtcoment);
+        txtmail=(EditText) findViewById(R.id.txtmail);
+        txtphne=(EditText) findViewById(R.id.txtphne);
+        btnsubmit=(Button) findViewById(R.id.btnsubmit);
+        txtorg=(EditText) findViewById(R.id.txtorg);
+        txttitle=(EditText) findViewById(R.id.txttitle);
+
+
+        Objects.requireNonNull(getSupportActionBar()).setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.teal_200)));
+
+        mauth= FirebaseAuth.getInstance();
+        firebaseDatabase= FirebaseDatabase.getInstance();
+
+
+        databaseReference= firebaseDatabase.getInstance().getReference("Users");
+        databaseReference.keepSynced(true);
+
+
+        btnsubmit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                submitcontent();
+            }
+        });
+    }
+
+    private void submitcontent()
+    {
+        String name=txtname.getText().toString();
+        String comment=txtcoment.getText().toString();
+        String mail=txtmail.getText().toString();
+        String phne=txtphne.getText().toString();
+        String org=txtorg.getText().toString();
+        String title=txttitle.getText().toString();
+
+        if (TextUtils.isEmpty(name)) {
+            Toast.makeText(this, "Please Input Your Name", Toast.LENGTH_SHORT).show();
+        }
+        else if (TextUtils.isEmpty(comment)){
+            Toast.makeText(this, "Please Input Your Comment", Toast.LENGTH_SHORT).show();
+        }
+        else if (TextUtils.isEmpty(mail)){
+            Toast.makeText(this, "Please Input Your Email", Toast.LENGTH_SHORT).show();
+        }
+        else if (TextUtils.isEmpty(org)){
+            Toast.makeText(this, "Please Input Your Organization", Toast.LENGTH_SHORT).show();
+        }
+        else if (TextUtils.isEmpty(title)){
+            Toast.makeText(this, "Please Input Your Job Designation", Toast.LENGTH_SHORT).show();
+        }
+        else if (TextUtils.isEmpty(phne)){
+            Toast.makeText(this, "Please Input Your Phone Number", Toast.LENGTH_SHORT).show();
+        }
+        HashMap<String,Object> hashMap= new HashMap<>();
+        hashMap.put("txtname", name);
+        hashMap.put("txtcoment",comment);
+        hashMap.put("txtmail", mail);
+        hashMap.put("txtphne",phne);
+        hashMap.put("txtorg", org);
+        hashMap.put("txttitle", title);
+
+        databaseReference.child("Users")
+                .child(name)
+                .setValue(hashMap)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()){
+                            Toast.makeText(visitorsform.this,"Thank You For Visiting Our Stand",Toast.LENGTH_SHORT).show();
+                            Gohome();
+
+                        }else
+                        {
+                            String message= task.getException().getMessage();
+                            Toast.makeText(visitorsform.this, "Error Occurred"+message, Toast.LENGTH_SHORT).show();
+                        }
+
+                    }
+                });
+
+    }
+
+    private void Gohome()
+    {
+        Intent home=new Intent(visitorsform.this, MainActivity.class);
+        startActivity(home);
+        finish();
+    }
+}
